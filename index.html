@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Что посеешь — игра Агропромцифры</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FCFCFC; --ink:#101828; --mute:#646466; --line:#E5E5E5; --soft:#EEF0F2;
+  --green:#00A854; --green2:#0CC642; --teal:#1EE4BA; --cyan:#00D8DE;
+  --roots:#00A854; --grip:#E9A825; --contour:#1497C9;
+  --bad:#E5484D; --r:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body:before,body:after{content:"";position:fixed;z-index:-1;border-radius:50%;filter:blur(90px);pointer-events:none}
+body:before{width:60vw;height:55vh;left:-18vw;bottom:-22vh;background:radial-gradient(circle,#3CC56E 0%,rgba(60,197,110,.0) 70%)}
+body:after{width:40vw;height:40vh;right:-12vw;top:-16vh;background:radial-gradient(circle,#6FB39C 0%,rgba(111,179,156,0) 70%)}
+h1,h2,h3,.uf{font-family:Unbounded,Inter,sans-serif;letter-spacing:-.01em}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:16px 28px;border-radius:999px;font-weight:700;font-size:17px;background:var(--green);color:#fff;transition:transform .12s,box-shadow .2s;box-shadow:0 10px 30px -10px rgba(0,168,84,.6)}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line);box-shadow:none}
+.btn[disabled]{opacity:.35;pointer-events:none}
+.logo{height:26px}
+.screen{display:none;min-height:100vh}
+.screen.on{display:flex}
+.tag{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 12px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--mute)}
+.grad{background:linear-gradient(90deg,var(--green2),var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* INTRO */
+#intro{flex-direction:column;justify-content:space-between;padding:36px 6vw}
+#intro .top{display:flex;justify-content:space-between;align-items:center}
+#intro .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:5vw;align-items:center;flex:1;padding:4vh 0}
+#intro h1{font-size:clamp(44px,6.4vw,104px);font-weight:800;line-height:.95;text-transform:uppercase;margin:18px 0 22px}
+#intro .lead{font-size:clamp(17px,1.5vw,22px);line-height:1.45;color:var(--mute);max-width:620px}
+#intro .lead b{color:var(--ink)}
+#intro .rules{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:30px 0 34px;max-width:720px}
+.rule{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.rule .n{font-family:Unbounded;font-size:13px;color:var(--green);font-weight:600}
+.rule p{font-size:14px;line-height:1.4;margin-top:6px}
+.deck{position:relative;height:min(62vh,560px)}
+.pcard{position:absolute;width:62%;aspect-ratio:3/4.2;border-radius:22px;background:#fff;border:1px solid var(--line);box-shadow:0 30px 60px -30px rgba(16,24,40,.35);display:flex;flex-direction:column;overflow:hidden}
+.pcard .band{height:24%;display:flex;align-items:flex-end;padding:14px;color:#fff;font-family:Unbounded;font-weight:800;font-size:clamp(13px,1.3vw,22px);text-transform:uppercase}
+.pcard .body{padding:16px;font-size:14px;color:var(--mute);line-height:1.4;flex:1;display:flex;flex-direction:column;justify-content:space-between}
+.pcard .price{font-family:Unbounded;color:var(--ink);font-weight:600}
+.pcard{width:31%}
+.pcard:nth-child(1){left:0;top:14%;transform:rotate(-6deg)}
+.pcard:nth-child(2){left:34.5%;top:4%;transform:rotate(1deg);z-index:2}
+.pcard:nth-child(3){left:69%;top:16%;transform:rotate(6deg)}
+.pcard .ico{font-size:44px;line-height:1;margin:6px 0}
+.foot{display:flex;justify-content:space-between;align-items:center;color:var(--mute);font-size:13px}
+.linkish.ghost{opacity:0!important;cursor:default!important;-webkit-tap-highlight-color:transparent;outline:none}.linkish.ghost:focus-visible{opacity:0!important}
+.linkish{text-decoration:underline;text-underline-offset:3px;color:var(--mute);font-size:13px}
+
+/* PREDICT */
+#predict{flex-direction:column;align-items:center;justify-content:center;padding:40px 6vw;text-align:center}
+#predict h2{font-size:clamp(28px,3.4vw,52px);text-transform:uppercase;font-weight:800;line-height:1.05;max-width:960px}
+#predict p.sub{color:var(--mute);font-size:18px;margin:16px 0 40px;max-width:640px;line-height:1.45}
+.choices3{display:grid;grid-template-columns:repeat(3,minmax(0,300px));gap:18px}
+.force{background:#fff;border:2px solid var(--line);border-radius:24px;padding:26px 22px;text-align:left;transition:.15s;position:relative;overflow:hidden}
+.force:hover{border-color:var(--ink);transform:translateY(-3px)}
+.force .dot{width:44px;height:44px;border-radius:12px;margin-bottom:18px}
+.force h3{font-size:24px;font-weight:800;text-transform:uppercase}
+.force p{color:var(--mute);margin-top:8px;line-height:1.4;font-size:15px}
+
+/* GAME */
+#game{padding:20px 2.4vw;gap:2.2vw;align-items:stretch}
+.boardwrap{flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+.board{position:relative;width:min(92vh,56vw);aspect-ratio:1;display:grid;grid-template-columns:1.35fr repeat(4,1fr) 1.35fr;grid-template-rows:1.35fr repeat(4,1fr) 1.35fr;gap:4px;background:#fff;border:1px solid var(--line);border-radius:22px;padding:6px;box-shadow:0 30px 70px -40px rgba(16,24,40,.35)}
+.cell{background:var(--bg);border:1px solid var(--line);border-radius:10px;position:relative;overflow:hidden;display:flex;flex-direction:column;font-size:clamp(8px,.78vw,12px);transition:background .3s}
+.cell .cb{height:22%;min-height:8px}
+.cell .ct{padding:5px 6px;font-weight:600;line-height:1.15;flex:1;display:flex;flex-direction:column;justify-content:flex-start;gap:3px}
+.cell .cn{font-family:Unbounded;font-size:.85em;color:var(--mute)}
+.cell.corner{align-items:center;justify-content:center;text-align:center;font-family:Unbounded;font-weight:800;text-transform:uppercase;font-size:clamp(8px,.9vw,14px);padding:6px;line-height:1.1}
+.cell.corner small{display:block;font-family:Inter;font-weight:600;text-transform:none;color:var(--mute);font-size:.8em;margin-top:4px}
+.cell.chance{background:repeating-linear-gradient(45deg,#fff,#fff 8px,#F3F6F4 8px,#F3F6F4 16px)}
+.cell.chance .q{font-family:Unbounded;font-size:clamp(14px,2vw,30px);font-weight:800}
+.cell.won{background:#fff}
+.cell .house{position:absolute;right:5px;bottom:5px;width:14px;height:14px;display:none}
+.cell.won .house{display:block}
+.cell.lost .ct{opacity:.6}
+.cell.cur.lost .ct,.cell.cur .ct{opacity:1}
+.cell.lost:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(-45deg,transparent,transparent 6px,rgba(229,72,77,.08) 6px,rgba(229,72,77,.08) 12px)}
+.cell.cur{outline:3px solid var(--ink);outline-offset:-2px}
+.center{grid-column:2/6;grid-row:2/6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh;padding:4%;text-align:center}
+.center .logo{height:clamp(14px,1.7vw,26px)}
+.center .ttl{font-family:Unbounded;font-weight:800;font-size:clamp(20px,3.2vw,52px);text-transform:uppercase;line-height:.95}
+.cap{font-family:Unbounded;font-weight:800;font-size:clamp(22px,3vw,46px)}
+.cap small{display:block;font-family:Inter;font-weight:600;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:2px}
+.streets{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.sp{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);padding:6px 10px;border-radius:999px;font-size:clamp(10px,.85vw,13px);font-weight:600}
+.sp i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.token{position:absolute;width:4.2%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 12%,var(--ink) 13% 100%);box-shadow:0 6px 14px rgba(16,24,40,.45),0 0 0 3px #fff;z-index:5;transition:left .32s cubic-bezier(.5,1.6,.6,1),top .32s cubic-bezier(.5,1.6,.6,1);transform:translate(-50%,-50%)}
+.coinfly{position:absolute;margin-top:-4%;font-family:Unbounded;font-weight:800;font-size:22px;z-index:9;pointer-events:none;animation:fly 1.3s ease-out forwards}
+@keyframes fly{from{opacity:1;transform:translate(-50%,-50%)}to{opacity:0;transform:translate(-50%,-180%)}}
+
+.panel{flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;max-height:calc(100vh - 40px)}
+.phead{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.progress{display:flex;gap:4px;flex:1}
+.progress i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.progress i.ok{background:var(--green)} .progress i.no{background:var(--bad)} .progress i.now{background:var(--ink)}
+.qcard{background:#fff;border:1px solid var(--line);border-radius:26px;padding:clamp(18px,2.2vw,34px);display:flex;flex-direction:column;gap:16px;overflow:auto;flex:1;box-shadow:0 30px 60px -45px rgba(16,24,40,.4)}
+.qmeta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{font-size:12px;font-weight:700;padding:6px 11px;border-radius:999px;color:#fff;letter-spacing:.04em;text-transform:uppercase}
+.chip.x2{background:var(--ink)}
+.qtitle{font-family:Unbounded;font-weight:800;font-size:clamp(20px,2vw,32px);text-transform:uppercase;line-height:1.05}
+.qtext{font-size:clamp(16px,1.3vw,20px);line-height:1.45}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:14px;align-items:center;text-align:left;padding:15px 18px;border-radius:16px;border:1.5px solid var(--line);background:var(--bg);font-size:clamp(15px,1.15vw,18px);line-height:1.3;transition:.12s}
+.opt:hover{border-color:var(--ink)}
+.opt .l{flex:0 0 32px;height:32px;border-radius:10px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:Unbounded;font-weight:600;font-size:13px}
+.opt.sel{border-color:var(--ink);background:#fff;box-shadow:0 0 0 3px rgba(16,24,40,.08)}
+.opt.sel .l{background:var(--ink);color:#fff}
+.opt.right{border-color:var(--green);background:#EAF8F0}
+.opt.right .l{background:var(--green);color:#fff;border-color:var(--green)}
+.opt.wrong{border-color:var(--bad);background:#FDECEC}
+.opt.wrong .l{background:var(--bad);color:#fff;border-color:var(--bad)}
+.opts.locked .opt{pointer-events:none}
+.bet.locked .coin:not(.sel){opacity:.35}
+.bet.locked{pointer-events:none}
+.bet{display:none;flex-direction:column;gap:10px;border-top:1px dashed var(--line);padding-top:16px}
+.bet.on{display:flex}
+.bet .bl{font-weight:600;font-size:15px}
+.bet .bl span{color:var(--mute);font-weight:500}
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.coin{min-width:96px;padding:12px 16px;border-radius:999px;border:2px dashed #C9CDD3;background:#fff;font-family:Unbounded;font-weight:600;font-size:16px;transition:.12s}
+.coin small{display:block;font-family:Inter;font-size:11px;color:var(--mute);font-weight:600}
+.coin:hover{border-color:var(--ink)}
+.coin.sel{border-style:solid;border-color:var(--green);background:var(--green);color:#fff}
+.coin.sel small{color:#DFF7E9}
+.reveal{display:none;border-radius:18px;padding:18px 20px;gap:14px;align-items:flex-start}
+.reveal.on{display:flex}
+.reveal.good{background:linear-gradient(120deg,#E3F8EC,#E3FBF6)}
+.reveal.bad{background:#FFF1F1}
+.reveal .face{flex:0 0 46px;height:46px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-family:Unbounded;font-weight:800}
+.reveal .rh{font-family:Unbounded;font-weight:800;font-size:18px;margin-bottom:6px}
+.reveal p{line-height:1.45;font-size:16px}
+.reveal .who{font-size:12px;color:var(--mute);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.actions{display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:calc(-1*clamp(18px,2.2vw,34px));background:#fff;padding:12px 0 clamp(18px,2.2vw,34px);margin-top:auto;border-top:1px solid var(--line)}
+
+/* OVERLAYS */
+.ov{position:fixed;inset:0;background:rgba(16,24,40,.55);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:50;padding:24px}
+.ov.on{display:flex;animation:fade .25s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{background:#fff;border-radius:28px;max-width:620px;width:100%;padding:34px;text-align:center;animation:pop .35s cubic-bezier(.3,1.5,.6,1)}
+@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
+.modal h3{font-size:clamp(22px,2.4vw,34px);font-weight:800;text-transform:uppercase;line-height:1.05;margin:14px 0 12px}
+.modal p{color:var(--mute);font-size:17px;line-height:1.45;margin-bottom:22px}
+.modal .big{font-family:Unbounded;font-weight:800;font-size:44px}
+.stamp{display:inline-block;font-family:Unbounded;font-weight:800;color:var(--bad);border:4px solid var(--bad);padding:8px 18px;border-radius:10px;transform:rotate(-6deg);font-size:24px;text-transform:uppercase}
+
+/* VIDEO */
+#video{flex-direction:column;align-items:center;justify-content:center;padding:30px 5vw;background:var(--ink);color:#fff}
+#video .vframe{width:min(1100px,100%);aspect-ratio:16/9;border-radius:24px;overflow:hidden;position:relative;background:radial-gradient(circle at 20% 90%,rgba(0,168,84,.55),transparent 50%),radial-gradient(circle at 90% 10%,rgba(30,228,186,.35),transparent 45%),#0B1220;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.12)}
+#video video{width:100%;height:100%;object-fit:cover}
+.vph{text-align:center;padding:5%;max-width:820px}
+.vph .k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:700}
+.vph h2{font-size:clamp(30px,4vw,64px);font-weight:800;text-transform:uppercase;margin:14px 0}
+.vph .scene{color:#C9D2DC;line-height:1.5;font-size:clamp(14px,1.2vw,18px)}
+.vph .vo{text-wrap:balance;margin-top:18px;font-family:Unbounded;font-size:clamp(16px,1.5vw,24px);line-height:1.3}
+.vbar{position:absolute;left:0;bottom:0;height:5px;background:var(--teal);width:0}
+#video .vact{margin-top:24px;display:flex;gap:12px}
+#video .btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.3)}
+
+/* FATE */
+#fate{flex-direction:column;align-items:center;padding:20px 4vw 40px;gap:16px}
+.fatecard{width:min(1080px,100%);background:#fff;border-radius:30px;border:1px solid var(--line);overflow:hidden;box-shadow:0 40px 80px -50px rgba(16,24,40,.45)}
+.fhead{padding:30px 36px;color:#fff;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;position:relative;overflow:hidden}
+.fhead .k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;opacity:.85}
+.fhead h2{font-size:clamp(30px,4vw,60px);font-weight:800;text-transform:uppercase;line-height:.95;margin-top:10px}
+.fhead .capbox{text-align:right;font-family:Unbounded;font-weight:800;font-size:clamp(22px,2.4vw,36px)}
+.fhead .capbox small{display:block;font-family:Inter;font-size:12px;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+.fbody{display:grid;grid-template-columns:1.25fr .75fr;gap:0}
+.fcol{padding:28px 36px;display:flex;flex-direction:column;gap:22px}
+.fcol+.fcol{background:var(--bg);border-left:1px solid var(--line)}
+.fs h4{font-family:Unbounded;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--green);margin-bottom:8px;font-weight:600}
+.fs p{line-height:1.5;font-size:16px}
+.fs p+p{margin-top:8px}
+.paths{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.path{border-radius:14px;padding:14px;font-size:14px;line-height:1.45}
+.path b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.path.n{background:#FFF1F1} .path.y{background:#E6F8EF}
+.bars{display:flex;flex-direction:column;gap:12px}
+.bar .bt{display:flex;justify-content:space-between;font-size:14px;font-weight:600;margin-bottom:6px}
+.bar .bg{height:12px;border-radius:6px;background:var(--line);overflow:hidden}
+.bar .bg i{display:block;height:100%;border-radius:6px}
+.amulet{background:#fff;border:1.5px solid var(--green);border-radius:18px;padding:16px;display:flex;gap:14px;align-items:center}
+.amulet+.amulet{margin-top:10px}
+.qr{flex:0 0 74px;height:74px;border-radius:10px;border:1.5px dashed #B5BAC1;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--mute);text-align:center;font-weight:600}
+.amulet b{display:block;font-size:15px;margin-bottom:3px}
+.amulet span{font-size:13px;color:var(--mute);line-height:1.35;display:block}
+.rank{font-family:Unbounded;font-weight:800;font-size:30px}
+.fatefoot{display:flex;justify-content:space-between;align-items:center;padding:16px 36px;border-top:1px solid var(--line);font-size:13px;color:var(--mute)}
+
+/* REVIEW (approval) */
+#review{flex-direction:column;padding:30px 5vw 60px;gap:20px}
+#review h2{font-size:clamp(26px,3vw,44px);font-weight:800;text-transform:uppercase}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tabs button{padding:10px 18px;border-radius:999px;border:1.5px solid var(--line);font-weight:600;background:#fff}
+.tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+.rcard{background:#fff;border:1px solid var(--line);border-radius:22px;overflow:hidden;display:flex;flex-direction:column}
+.rcard .rh{padding:18px 20px;color:#fff}
+.rcard .rh h3{font-size:22px;font-weight:800;text-transform:uppercase;margin-top:6px}
+.rcard .rb{padding:18px 20px;display:flex;flex-direction:column;gap:12px;font-size:14px;line-height:1.45;flex:1}
+.rcard .rb b{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-bottom:3px}
+.rcard .rf{padding:14px 20px;border-top:1px solid var(--line)}
+.qlist{display:flex;flex-direction:column;gap:12px}
+.qrow{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 20px;display:grid;grid-template-columns:52px 1fr;gap:14px}
+.qrow .num{font-family:Unbounded;font-weight:800;font-size:22px}
+.qrow ul{margin:8px 0 0 18px;font-size:14px;line-height:1.6}
+.qrow li.ok{color:var(--green);font-weight:700}
+.qrow .f{font-size:14px;color:var(--mute);margin-top:8px;line-height:1.45}
+.logic{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;line-height:1.6;font-size:15px}
+.logic table{border-collapse:collapse;width:100%;margin-top:10px}
+.logic td,.logic th{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+
+
+.hostbig{position:relative;display:flex;flex-direction:column;align-items:center;gap:14px}
+.hostbig img{height:min(48vh,430px);filter:drop-shadow(0 30px 30px rgba(16,24,40,.18))}
+.bubble{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 16px;font-size:15px;line-height:1.4;position:relative;box-shadow:0 14px 30px -20px rgba(16,24,40,.35)}
+.bubble.big{font-size:clamp(15px,1.2vw,18px);max-width:440px;border-radius:22px;padding:18px 22px}
+.bubble.big:after{content:"";position:absolute;left:50%;bottom:-9px;width:16px;height:16px;background:#fff;border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:translateX(-50%) rotate(45deg)}
+.streets3{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.streets3 span{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600}
+.streets3 i{width:10px;height:10px;border-radius:3px}
+.host{display:flex;align-items:flex-end;gap:10px}
+.host img{height:64px}
+.host .bubble{font-weight:600}
+.lvl{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;color:var(--mute);margin-left:4px}
+.lvl i{width:8px;height:14px;border-radius:2px;background:var(--line);display:inline-block}
+.lvl i.on{background:var(--ink)}
+.reveal{scroll-margin-bottom:110px}
+.host img{height:72px;object-fit:contain;object-position:bottom}
+.reveal .ava{flex:0 0 74px;height:96px;object-fit:contain;object-position:bottom;margin:-14px 0 -10px}
+.mava{height:110px;display:block;margin:0 auto 6px}
+.nick{margin-top:12px;font-family:Unbounded;font-weight:600;font-size:clamp(16px,1.5vw,22px);opacity:.95}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line)}
+.stat{padding:18px 20px;border-right:1px solid var(--line)}
+.stat:last-child{border-right:0}
+.stat .sv{font-family:Unbounded;font-weight:800;font-size:clamp(22px,2.2vw,32px)}
+.stat .sl{font-size:13px;color:var(--mute);margin-top:4px;line-height:1.3}
+.radar{width:100%;max-width:480px;display:block;margin:0 auto}
+.legend{font-size:13px;color:var(--mute);display:flex;gap:8px;align-items:center;justify-content:center}
+.legend i{display:inline-block;width:18px;height:4px;border-radius:2px}
+.legend .lg1{background:#00A854}.legend .lg2{background:repeating-linear-gradient(90deg,#E9A825 0 6px,transparent 6px 10px)}
+.todo,.facts{margin-left:18px;line-height:1.5;font-size:15px;display:flex;flex-direction:column;gap:8px}
+.fbody{grid-template-columns:1fr 1fr}
+@media (max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+.vt{position:absolute;opacity:0;transition:opacity .6s,transform .6s;pointer-events:none}
+.vt.on{opacity:1;transform:none}
+.vt1{left:4%;top:5%;transform:translateY(-12px);background:rgba(11,18,32,.62);backdrop-filter:blur(6px);border-radius:18px;padding:14px 22px;text-align:left}
+.vt1 .k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:700}
+.vt1 h2{margin:4px 0 0;font-size:clamp(24px,3vw,46px);font-weight:800;text-transform:uppercase;color:#fff}
+.vt2{right:1.5%;bottom:0;display:flex;flex-direction:row;align-items:flex-start;gap:4px;transform:translateY(16px);max-width:60%}
+.vt2 img{height:clamp(160px,26vw,320px);display:block;order:2;margin-right:1.5%;filter:drop-shadow(0 0 18px rgba(11,18,32,.55))}
+.vt2 .bubble{order:1;margin-top:8%;color:var(--ink);font-family:Unbounded;font-weight:600;font-size:clamp(14px,1.5vw,22px);line-height:1.3;width:max-content;max-width:min(380px,30vw);text-wrap:balance;margin-right:10px}
+.vt2 .bubble:after{content:"";position:absolute;right:-8px;top:24px;width:16px;height:16px;background:#fff;border-right:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg)}
+#video .vbar{z-index:2}
+@media (max-width:720px){
+  html,body{overflow-x:hidden}
+  #game{padding:8px;gap:10px}
+  .board{width:min(94vw,58vh);gap:2px;padding:6px;border-radius:14px}
+  .cell{border-radius:6px;font-size:0}
+  .cell .ct{padding:2px;justify-content:center;align-items:center}
+  .cell .ct .cn{font-size:9px}
+  .cell.corner{font-size:7px;padding:2px;line-height:1.05}
+  .cell.corner small{display:none}
+  .cell.chance .q{font-size:16px}
+  .center{gap:4px;padding:2%}
+  .center .logo{display:none}
+  .center .ttl{font-size:clamp(16px,6vw,26px)}
+  .center .cap small{font-size:9px}
+  .center .streets{gap:3px;flex-wrap:wrap;justify-content:center}
+  .center .sp{font-size:10px;padding:3px 6px}
+  .token{width:6%}
+  .panel{padding:14px}
+  .vt1{padding:8px 12px}.vt1 h2{font-size:18px}
+  .vt2 img{height:110px}.vt2 .bubble{font-size:12px;max-width:52vw;padding:8px 10px}
+  #video{padding:10px}
+  #intro .top .tag{display:none}
+  #intro{padding-bottom:90px}
+  #intro .btn{position:sticky;bottom:12px;z-index:5;box-shadow:0 10px 30px rgba(0,168,84,.45)}
+  .panel>.logo,.panel .phead .logo{display:none}
+  .vt2 .bubble{max-width:44vw;text-wrap:pretty;font-size:11px}
+  .vt2 img{height:90px}
+  .vt1 h2{font-size:15px}.vt1 .k{font-size:9px}
+  #video .vact .btn{font-size:14px;padding:12px 16px;white-space:nowrap}
+  #video .vframe{width:100%}
+  .radar text{font-size:19px}
+  .radar{max-width:100%}
+}
+
+
+.token{width:4.6%;border-radius:0;background:none!important;box-shadow:none!important;perspective:600px;transform:translate(-50%,-62%)}
+.token .die{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(-22deg) rotateY(32deg);transition:transform .32s cubic-bezier(.4,1.4,.6,1)}
+.token .df{position:absolute;inset:0;border-radius:18%;background:radial-gradient(circle at 30% 25%,#FFF6D8 0,#F5D27A 45%,#E0A526 100%);border:1px solid rgba(122,78,45,.35);box-shadow:inset 0 0 6px rgba(122,78,45,.35);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:14%;backface-visibility:hidden}
+.token .df i{display:block;margin:auto;width:62%;height:78%;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;transform:rotate(-20deg)}
+.token .df i.on{background:radial-gradient(circle at 35% 30%,#4BD27A,#00A854 55%,#006B35);box-shadow:0 1px 1px rgba(0,60,30,.4)}
+.token .f1{transform:translateZ(calc(var(--h)/2))}
+.token .f6{transform:rotateY(180deg) translateZ(calc(var(--h)/2))}
+.token .f2{transform:rotateY(90deg) translateZ(calc(var(--h)/2))}
+.token .f5{transform:rotateY(-90deg) translateZ(calc(var(--h)/2))}
+.token .f3{transform:rotateX(90deg) translateZ(calc(var(--h)/2))}
+.token .f4{transform:rotateX(-90deg) translateZ(calc(var(--h)/2))}
+.token .dshadow{position:absolute;left:8%;right:8%;bottom:-38%;height:28%;border-radius:50%;background:radial-gradient(rgba(16,24,40,.45),transparent 70%)}
+.token.hop .die{animation:hop .32s ease-out}
+@keyframes hop{50%{translate:0 -45%}}
+
+#video{padding:18px 5vw}
+#video .vframe{width:min(1100px,100%,(100vh - 120px)*16/9)}
+#video .vact{margin-top:14px}
+.hostbig img,.host img,.ava,.mava{image-rendering:auto}
+
+.duo{display:flex;align-items:flex-end;justify-content:center;gap:2%}
+.duo img{height:min(44vh,400px)}
+.duo .kolimg{height:min(38vh,350px);animation:kolIdle 2.6s ease-in-out infinite;transform-origin:50% 100%}
+#hostsel{flex-direction:column;align-items:center;justify-content:center;padding:40px 6vw;text-align:center}
+#hostsel h2{font-size:clamp(28px,3.4vw,52px);text-transform:uppercase;font-weight:800;line-height:1.05;max-width:960px}
+#hostsel p.sub{color:var(--mute);font-size:18px;margin:16px 0 10px;max-width:640px;line-height:1.45}
+.hosts2{display:grid;grid-template-columns:repeat(2,minmax(0,320px));gap:22px;justify-content:center;margin-top:26px}
+.hcard{background:#fff;border:2px solid var(--line);border-radius:26px;padding:22px 20px 24px;cursor:pointer;font:inherit;color:inherit;transition:transform .2s,border-color .2s,box-shadow .2s}
+.hcard:hover,.hcard:focus-visible{transform:translateY(-4px);border-color:var(--green);box-shadow:0 22px 40px -24px rgba(0,168,84,.6)}
+.hcard img{height:min(38vh,320px);width:100%;display:block;margin:0 auto 12px;object-fit:contain;object-position:bottom}
+.hcard.kolc img{padding-top:0}
+.hcard{display:flex;flex-direction:column;align-items:center}
+.hcard p{text-wrap:balance}
+#hostsel h2{text-wrap:balance}
+.hcard h3{font-family:Unbounded;font-size:22px;margin:0 0 6px}
+.hcard p{font-size:14px;color:var(--mute);margin:0;line-height:1.4}
+@keyframes kolIdle{0%,100%{transform:translateY(0) rotate(0) scaleY(1)}25%{transform:translateY(-2%) rotate(-2deg) scaleY(1.01)}50%{transform:translateY(0) rotate(0) scaleY(.985)}75%{transform:translateY(-2%) rotate(2deg) scaleY(1.01)}}
+@keyframes kolHappy{0%,100%{transform:translateY(0) scale(1)}15%{transform:translateY(0) scale(1.06,.92)}35%{transform:translateY(-16%) scale(.96,1.06) rotate(-4deg)}55%{transform:translateY(0) scale(1.05,.95)}70%{transform:translateY(-7%) rotate(3deg)}85%{transform:translateY(0)}}
+@keyframes kolOops{0%,100%{transform:rotate(0)}10%{transform:rotate(-7deg) translateX(-3%)}22%{transform:rotate(6deg) translateX(3%)}34%{transform:rotate(-5deg)}46%{transform:rotate(4deg)}60%{transform:rotate(-2deg) translateY(2%) scaleY(.97)}80%{transform:rotate(0) translateY(2%) scaleY(.97)}}
+.grow{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:10px}
+.grow li{background:#fff;border:1.5px solid var(--line);box-shadow:inset 5px 0 0 var(--green);border-radius:14px;padding:12px 14px 12px 18px}
+.grow b{display:block;font-size:15px;margin-bottom:2px}
+.grow span{font-size:13px;color:#4A4F57;line-height:1.35}
+.sitecta{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 10px;background:linear-gradient(120deg,#008A45,#0F9488);color:#fff;text-decoration:none;border-radius:16px;padding:14px 18px;font-family:Unbounded;font-weight:700;font-size:18px}
+.sitecta small{grid-column:1;font-family:Inter;font-weight:600;font-size:12px;opacity:.9;letter-spacing:.04em;text-transform:uppercase}
+.sitecta span{grid-column:2;grid-row:1/3;font-size:28px}
+@media (max-width:720px){.hosts2{grid-template-columns:1fr 1fr;gap:10px}.hcard{padding:12px 8px}.hcard img{height:150px}.hcard h3{font-size:16px}.hcard p{font-size:12px}.duo img{height:200px}.duo .kolimg{height:175px}}
+
+/* v8: живое поле */
+.board{background:linear-gradient(160deg,#F6F1E2 0%,#EEF5E6 55%,#E7F2EE 100%)!important;border:1px solid #E3DCC6!important;box-shadow:0 30px 70px -40px rgba(60,50,20,.45),inset 0 0 0 6px rgba(255,255,255,.55)!important}
+.cell{background:#fff;border:1px solid rgba(16,24,40,.07);box-shadow:0 2px 0 rgba(120,100,40,.10),0 6px 14px -10px rgba(16,24,40,.35)}
+.cell .cb{height:18%}
+.cell .ci{z-index:0}.cell .ct{position:relative;z-index:3!important;justify-content:space-between}
+.cell .ct>span:first-child{text-shadow:0 0 6px #fff,0 0 3px #fff}
+.cell .ci{position:absolute;right:6%;bottom:6%;width:54%;height:46%;object-fit:contain;object-position:right bottom;mix-blend-mode:multiply;pointer-events:none;transition:transform .35s}
+.cell.cur .ci,.cell.won .ci{transform:scale(1.06)}
+.cell.lost .ci{filter:grayscale(.7);opacity:.65}
+.cell.corner{flex-direction:column;justify-content:center;gap:2%}
+.cell.corner .cim{width:58%;height:46%;object-fit:contain;mix-blend-mode:multiply;pointer-events:none}
+.cell.corner .clbl{line-height:1.05}
+.cell.corner small{margin-top:2px}
+.cell.chance{background:radial-gradient(circle at 50% 38%,#fff 0 45%,color-mix(in srgb,var(--sc) 12%,#fff) 100%)!important}
+.cell .qb{position:absolute;left:6px;top:6px;width:22%;aspect-ratio:1;border-radius:30%;color:#fff;font-family:Unbounded;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:1.15em;box-shadow:0 3px 8px -3px rgba(0,0,0,.35)}
+.cell.deco{background:linear-gradient(180deg,#fff,#FBF7EC)}
+.cell.start{background:linear-gradient(135deg,#E6F8EF,#DDF6EC)!important}
+.center{background-size:cover;background-position:center;border-radius:14px;box-shadow:inset 0 0 0 1px rgba(16,24,40,.06)}
+.center{justify-content:flex-end!important;padding:3%!important}.center .plate .logo{display:none}
+.center .plate{background:rgba(255,255,255,.88);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:18px;padding:2.2% 5%;display:flex;flex-direction:column;align-items:center;gap:1.4vh;box-shadow:0 18px 40px -24px rgba(16,24,40,.5)}
+.qrcta{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:12px 16px 12px 12px;margin-top:6px}
+.qrcta img{width:190px;height:auto;display:block;border-radius:10px}
+.qrcta small{display:block;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.qrcta b{display:block;font-family:Unbounded;font-size:20px;margin:4px 0;color:#008A45}
+.qrcta span{font-size:13px;color:#4A4F57}
+@media print{.qrcta img{width:110px}}
+@media (max-width:720px){.cell .ci{width:64%;height:46%;right:3%;top:21%;bottom:auto;object-position:right top}.cell .ct .cn{position:relative;z-index:2;background:rgba(255,255,255,.85);border-radius:4px;padding:0 2px}.cell.corner .cim{width:78%;height:62%}.cell .qb{display:none}.center .plate{padding:3% 4%}.qrcta img{width:110px}}
+@media (max-width:1100px){
+  #game{flex-direction:column;padding:12px}
+  .board{width:min(96vw,62vh)}
+  .panel{max-height:none}
+  #intro .hero{grid-template-columns:1fr}
+  .deck{display:none}
+  .fbody{grid-template-columns:1fr}
+  .fcol+.fcol{border-left:0;border-top:1px solid var(--line)}
+}
+@media (max-width:720px){
+  .choices3,#intro .rules{grid-template-columns:1fr}
+  .paths{grid-template-columns:1fr}
+  .fhead{flex-direction:column;align-items:flex-start}
+  .fhead .capbox{text-align:left}
+}
+@media print{
+  body:before,body:after{display:none}
+  .screen{display:none!important}
+  #fate{display:flex!important;padding:0}
+  #fate .noprint{display:none!important}
+  .fatecard{box-shadow:none;border:0}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<section id="intro" class="screen on">
+  <div class="top"><img class="logo" src="logo.png" alt="Агропромцифра"><span class="tag">Деловая игра · 5 минут</span></div>
+  <div class="hero">
+    <div>
+      <span class="tag">Проверьте, готово ли хозяйство к сезону 2027</span>
+      <h1>Что <span class="grad">посеешь</span></h1>
+      <p class="lead">Три силы решают, устоит ли хозяйство в 2027 году: <b>Корни</b>, <b>Хватка</b> и <b>Контур</b>. Пройдите три улицы, ставьте монеты на свою уверенность и получите личный агропрофиль: звезду сил, сильные стороны и зоны роста.</p>
+      <div class="rules">
+        <div class="rule"><div class="n">01</div><p>На старте у вас <b>1000 монет</b></p></div>
+        <div class="rule"><div class="n">02</div><p>На каждый ответ ставите <b>100, 200 или 300</b>. Угадали — забрали, ошиблись — потеряли</p></div>
+        <div class="rule"><div class="n">03</div><p>Клетки <b>«Шанс»</b> удваивают ставку. Разоряет не незнание, а&nbsp;самоуверенность</p></div>
+      </div>
+      <button class="btn" onclick="go('hostsel')">Начать игру →</button>
+    </div>
+    <div class="hostbig">
+      <div class="bubble big">Привет! Я Пшеничка. Проведу вас по трем улицам: поле, деньги и цифра. Есть вопросы-разминки, а есть для настоящих профи. Готовы?</div>
+      <img src="media/psh_idle.webp" alt="Пшеничка">
+      <div class="streets3">
+        <span><i style="background:var(--roots)"></i>Корни · поле</span>
+        <span><i style="background:var(--grip)"></i>Хватка · деньги и ИИ</span>
+        <span><i style="background:var(--contour)"></i>Контур · цифра и защита</span>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>АО «Агропромцифра» · отраслевой центр цифровизации АПК</span><button class="linkish ghost" onclick="openReview()" aria-label="Служебный режим" title="">Режим согласования: вопросы, логика, концовки</button></div>
+</section>
+
+<!-- HOST -->
+<section id="hostsel" class="screen">
+  <span class="tag">Ваш помощник</span>
+  <h2 style="margin-top:18px">Кто проведет вас по улицам?</h2>
+  <p class="sub">Помощник подскажет после каждого ответа и объяснит, почему так.</p>
+  <div class="hosts2">
+    <button class="hcard" onclick="pickHost('psh')"><img src="media/psh_idle.webp" alt="Пшеничка"><h3>Пшеничка</h3><p>Знает поле и сроки, не прощает самоуверенности</p></button>
+    <button class="hcard kolc" onclick="pickHost('kol')"><img src="media/kol_card.webp" alt="Колосок"><h3>Колосок</h3><p>Разбирается в цифре и деньгах, всегда за честный расчет</p></button>
+  </div>
+</section>
+
+<!-- PREDICT -->
+<section id="predict" class="screen">
+  <img id="predimg" class="hostimg" src="media/psh_idle.webp" alt="" style="height:130px;margin-bottom:8px"><span class="tag">Перед стартом</span>
+  <h2 style="margin-top:18px">В чем ваша главная сила?</h2>
+  <p class="sub">Выберите честно. В конце сравним с вашими ответами.</p>
+  <div class="choices3">
+    <button class="force" onclick="startGame('roots')"><div class="dot" style="background:var(--roots)"></div><h3>Корни</h3><p>Я чувствую поле. Знаю, когда сеять и когда подождать.</p></button>
+    <button class="force" onclick="startGame('grip')"><div class="dot" style="background:var(--grip)"></div><h3>Хватка</h3><p>Я умею считать деньги и не ведусь на красивые обещания.</p></button>
+    <button class="force" onclick="startGame('contour')"><div class="dot" style="background:var(--contour)"></div><h3>Контур</h3><p>Я уверенно работаю в цифровых системах, и меня не провести фальшивой ссылкой.</p></button>
+  </div>
+</section>
+
+<!-- GAME -->
+<section id="game" class="screen">
+  <div class="boardwrap"><div class="board" id="board"></div></div>
+  <div class="panel">
+    <div class="phead">
+      <img class="logo" src="logo.png" alt="">
+      <div class="progress" id="prog"></div>
+      <span class="tag" id="qnum">1 / 15</span>
+    </div>
+    <div class="qcard" id="qcard"></div>
+  </div>
+</section>
+
+<!-- VIDEO -->
+<section id="video" class="screen">
+  <div class="vframe" id="vframe"></div>
+  <div class="vact"><button class="btn ghost" onclick="showFate()">Пропустить</button><button class="btn" onclick="showFate()">Мой агропрофиль →</button></div>
+</section>
+
+<!-- FATE -->
+<section id="fate" class="screen"></section>
+
+<!-- REVIEW -->
+<section id="review" class="screen"></section>
+
+<div class="ov" id="ov"><div class="modal" id="modal"></div></div>
+
+<script>
+const LOGO="logo.png";let PSH="media/psh_idle.webp",PSH_IDLE="media/psh_idle.webp",PSH_OK="media/psh_happy.webp",PSH_NO="media/psh_oops.webp";const KOL=["media/kol_idle.webp","media/kol_idle.webp","media/kol_happy.webp","media/kol_oops.webp"],P0=[PSH,PSH_IDLE,PSH_OK,PSH_NO];
+/* =========================================================
+   НАСТРОЙКИ. Ролики Higgsfield подставить сюда (mp4 рядом с файлом или URL).
+   Пока поле пустое, показывается заглушка со сценарием ролика.
+   ========================================================= */
+const VIDEOS_KOL={bankrot:"media/kol_end_bankrot.mp4",magnat:"media/kol_end_magnat.mp4",krepkiy:"media/kol_end_krepkiy.mp4",kupec:"media/kol_end_kupec.mp4",hozyain:"media/kol_end_hozyain.mp4",baron:"media/kol_end_baron.mp4"};const VIDEOS={bankrot:"media/end_bankrot.mp4",magnat:"media/end_magnat.mp4",krepkiy:"media/end_krepkiy.mp4",kupec:"media/end_kupec.mp4",hozyain:"media/end_hozyain.mp4",baron:"media/end_baron.mp4"};
+const START=1000, CREDIT=500, BETS=[100,200,300];
+
+const STREETS={
+  roots:{name:"Корни",color:"var(--roots)",hex:"#00A854",about:"поле и агрономия"},
+  grip:{name:"Хватка",color:"var(--grip)",hex:"#E9A825",about:"решения, деньги, ИИ"},
+  contour:{name:"Контур",color:"var(--contour)",hex:"#1497C9",about:"цифра и защита"}
+};
+const ORDER=["roots","grip","contour"];
+
+const Q=[
+ {s:"roots",lvl:2,short:"Озимые уходят в зиму",title:"Озимые уходят в зиму",tags:["agro"],
+  text:"Пшеницу посеяли, впереди зима. Сколько дней ей нужно расти осенью, чтобы перезимовать крепкой?",
+  o:[["10–15 дней, она закаленная"],["40–60 дней",1],["До первого снега, дальше сама разберется"],["90–120 дней, лишним не будет"]],
+  f:"До ухода в зиму пшеница должна раскуститься: 2–3 побега и вторичные корни. Перерастание так же опасно, как недоразвитие. Точные сроки зависят от зоны."},
+ {s:"roots",lvl:1,short:"Календарь против погоды",title:"Календарь против погоды",tags:["agro"],
+  text:"Агроном: «По календарю пора сеять, а земля сухая. Сеем, сроки важнее». Он прав?",
+  o:[["Прав, календарь — дело святое"],["Не прав: в сухую почву семена лягут и будут ждать дождя",1],["Главное, чтобы председатель не узнал"],["Прав, если семена протравлены: им влага не нужна"]],
+  f:"Пшеница календарь не читает. Без влаги в посевном слое всходы будут недружными, и часть растений уйдет в зиму слабой."},
+ {s:"roots",lvl:3,short:"Активные температуры",title:"Сумма активных температур",tags:["agro"],
+  text:"Агрономы считают «сумму активных температур». Какие среднесуточные температуры в нее входят?",
+  o:[["Все выше 0 °C"],["Выше +5 °C"],["Выше +10 °C",1],["Только выше +20 °C, остальное не считается"]],
+  f:"Активные — это среднесуточные температуры выше +10 °C. По их сумме подбирают культуры и гибриды под зону и прогнозируют сроки созревания."},
+ {s:"roots",lvl:1,short:"При чем тут пчелы",title:"При чем тут пчелы?",tags:["agro","digital"],
+  text:"Вы готовите обработку поля пестицидом. Учетная система спрашивает про пчел. Зачем?",
+  o:[["Это пасхалка разработчиков"],["Чтобы пасечники вовремя узнали о работах и закрыли ульи",1],["Пчелы тоже налогоплательщики"],["Чтобы рассчитать дозу препарата по числу ульев рядом"]],
+  f:"Один опрыск без предупреждения может погубить чужую пасеку. Поэтому место, дату и препарат фиксируют заранее, а пасечников оповещают."},
+ {s:"roots",lvl:3,short:"Что видит спутник",title:"Что видит спутник",chance:1,tags:["agro","digital"],
+  text:"На снимке поля по индексу NDVI один участок заметно «краснее» остальных. Что именно показывает NDVI?",
+  o:[["Влажность почвы на участке"],["Содержание азота в листьях"],["Сколько живой зеленой массы и насколько она активна",1],["Будущую урожайность в центнерах"]],
+  f:"NDVI показывает состояние и плотность зеленой массы. Он подсказывает, куда ехать, но причину — влага, питание, болезнь или огрех сеялки — определяет агроном на месте."},
+
+ {s:"grip",lvl:1,short:"Чудо-нейросеть",title:"Чудо-нейросеть",tags:["ai","money"],
+  text:"Продавец на выставке: «Наш ИИ поднимет урожайность на 30%». Что вы ответите?",
+  o:[["Беру две"],["А если на 40%?"],["Где, на каких полях и с чем сравнивали?",1],["А сеять она тоже умеет?"]],
+  f:"Цифра без условий сравнения ничего не значит. Сначала спросите про поля, годы и контроль, потом про цену."},
+ {s:"grip",lvl:3,short:"Окупаемость",title:"Считаем окупаемость",tags:["money"],
+  text:"Система мониторинга техники стоит 1 080 000 ₽ и экономит 30 000 ₽ в месяц на топливе и простоях. Когда она окупится?",
+  o:[["Через год"],["Через два года"],["Через три года",1],["Через 36 лет"]],
+  f:"1 080 000 ÷ 30 000 = 36 месяцев, то есть три года. Полезно до покупки попросить у продавца расчет на ваших цифрах, а не на средних по рынку."},
+ {s:"grip",lvl:3,short:"Глаза ИИ",title:"Работа для компьютерного зрения",tags:["ai","digital"],
+  text:"Какая из задач — именно для компьютерного зрения, а не для чат-бота?",
+  o:[["Написать письмо поставщику"],["Посчитать всходы по снимкам с дрона",1],["Составить прогноз цен на пшеницу"],["Перевести договор на английский"]],
+  f:"Компьютерное зрение работает с изображениями: всходы, сорняки, болезни листа, дефекты зерна. В АПК это одно из самых зрелых применений ИИ."},
+ {s:"grip",lvl:1,short:"Гости из-за рубежа",title:"Гости из-за рубежа",tags:["money"],
+  text:"Завтра приезжает делегация покупателей из другой страны, а переводчик заболел. Ваш план?",
+  o:[["Переносим встречу, а может, и контракт"],["Говорим громко и медленно, поймут"],["Каждый гость слушает синхронный перевод в своем телефоне по QR-коду",1],["Рисуем схему на салфетке"]],
+  f:"Сегодня для синхронного перевода не нужны кабинки и наушники. Хватает QR-кода и телефона."},
+ {s:"grip",lvl:3,short:"Пилот ИИ",title:"С чего начать внедрение ИИ",chance:1,tags:["ai","money"],
+  text:"Руководство решило попробовать ИИ в хозяйстве. Какой первый шаг даст понятный результат?",
+  o:[["Сразу купить решение на все хозяйство, чтобы получить скидку"],["Взять один процесс, одну метрику и сравнить с участком без ИИ",1],["Сначала закупить мощные серверы"],["Подождать, пока внедрят соседи"]],
+  f:"Пилот на одном процессе с контрольным участком — самый дешевый способ понять, есть ли эффект именно у вас. Масштабировать стоит то, что доказало пользу."},
+
+ {s:"contour",lvl:1,short:"Подарок на парковке",title:"Подарок на парковке",tags:["ib"],
+  text:"У конторы лежит флешка с надписью «Премии руководства 2026». Что делаете?",
+  o:[["Вставляю в рабочий компьютер, интересно же"],["Отдаю главбуху, это по ее части"],["Не вставляю и отношу ответственному за безопасность",1],["Проверю на старом ноутбуке без интернета, так безопасно"]],
+  f:"Это классика социальной инженерии. Флешку подбрасывают специально, а любопытство срабатывает лучше любого вируса."},
+ {s:"contour",lvl:2,short:"Звонит директор",title:"Звонит директор",tags:["ib","ai"],
+  text:"Звонок, голос директора: «Срочно переведи 2 миллиона поставщику, потом объясню. Я на совещании». Голос точно его. Что делаете?",
+  o:[["Перевожу, с директором не спорят"],["Прошу прислать письмо с его почты и перевожу"],["Кладу трубку и перезваниваю директору на известный номер",1],["Перевожу 3 миллиона для надежности"]],
+  f:"Нейросети подделывают голос по нескольким минутам записи, а почту тоже могут взломать. Надежно только перезвонить по номеру, который вы знаете сами."},
+ {s:"contour",lvl:2,short:"Удобный помощник",title:"Удобный помощник",tags:["ib","ai"],
+  text:"Экономист загрузил в бесплатный чат-бот базу покупателей, цены и договоры, чтобы получить аналитику. Что может случиться?",
+  o:[["Ничего, бот никому не расскажет"],["Данные окажутся на чужих серверах и уйдут из-под контроля",1],["Бот попросит прибавку к зарплате"],["Ничего страшного, если потом удалить переписку"]],
+  f:"Бесплатный сервис часто платит вам вашими же данными. Коммерческую тайну в открытые чат-боты не загружают."},
+ {s:"contour",lvl:3,short:"Надежный пароль",title:"Надежный пароль",tags:["ib","digital"],
+  text:"Какой вариант защитит рабочую учетную запись лучше всего?",
+  o:[["Kombain2026! — есть цифры, символ и заглавная"],["8 случайных символов, записанных в блокноте на столе"],["Длинная фраза из нескольких несвязанных слов плюс код из приложения при входе",1],["Один сложный пароль, но везде одинаковый, чтобы не забыть"]],
+  f:"Длина важнее «сложности», а второй фактор спасает, даже если пароль утек. Название техники, год и кличку собаки подбирают первыми."},
+ {s:"contour",lvl:3,short:"Найди настоящую",title:"Найдите настоящую ссылку",chance:1,tags:["ib","digital"],
+  text:"Пришло письмо со ссылкой на Госуслуги. Какой адрес настоящий?",
+  o:[["gosuslugi.ru.lk-vhod.com"],["gosuslugi-ru.online"],["gosusIugi.ru (с большой I вместо l)"],["www.gosuslugi.ru/profile",1]],
+  f:"Смотрите на адрес справа налево до первой одиночной косой черты: настоящий сайт стоит последним перед ней. В первом варианте это lk-vhod.com, а не Госуслуги."}
+];
+
+/* Концовки (сюжеты роликов — на согласование) */
+const ENDINGS={
+ bankrot:{name:"Банкрот",grad:"linear-gradient(120deg,#3A0D12,#E5484D)",
+  rule:"После возврата кредитов банку капитал ≤ 0, или на всех улицах не больше 2 верных",
+  sees:"Вы играли смело и ставили по-крупному. Разорило не незнание, а уверенность там, где правила уже поменялись. Хорошая новость: это исправляется быстрее, чем кажется.",
+  scene:"Фишка уверенно несется по доске и скупает улицы одну за другой. Клетки трескаются под ней, монеты осыпаются, сверху падает красная печать «БАНКРОТ». В конце фишка стоит одна на пустой доске.",
+  vo:"Разорило не незнание. Разорила уверенность."},
+ magnat:{name:"Агромагнат",grad:"linear-gradient(120deg,#00A854,#1EE4BA)",
+  rule:"Каждая из трех улиц — 4 или 5 верных ответов",
+  sees:"Все три улицы ваши. Вы понимаете поле, считаете деньги и уверенно работаете с цифровыми системами. Такой результат бывает редко.",
+  scene:"На всех трех улицах вырастают элеваторы. Над полями поднимается солнце, комбайны идут строем, на экранах в конторе все зеленое. Камера отъезжает: доска превращается в карту региона.",
+  vo:"Хозяйство готово к 2027 году."},
+ krepkiy:{name:"Крепкий хозяин",grad:"linear-gradient(120deg,#101828,#4E4E4D)",
+  rule:"На всех трех улицах одинаковое число верных ответов (но не все ≥4)",
+  sees:"Вы ровный по всем трем направлениям. Провалов нет, но и явного преимущества тоже. Хозяйство держится, но для роста нужен рывок в одном из направлений.",
+  scene:"На каждой улице стоит по аккуратному амбару, но ни одного элеватора. Соседние фишки обгоняют, а наша стоит на месте. Ветер гоняет по доске пару монет.",
+  vo:"Устойчиво. Но на устойчивость в 2027 году больше никто не ставит."},
+ kupec:{name:"Купец",grad:"linear-gradient(120deg,#B57A00,#E9A825)",lead:"grip",
+  rule:"Сильнее всего улица «Хватка»",
+  sees:"Сильнее всего у вас «Хватка», то есть деньги и решения: вы умеете считать и не ведетесь на красивые обещания. Какие направления отстают, видно на звезде сил.",
+  scene:"Фишка ловко покупает и продает, монеты сыплются в копилку. Тем временем соседняя улица зарастает бурьяном, а на клетке с документами копится стопка бумаг.",
+  vo:"Деньги вы считаете. А поле считает вас."},
+ hozyain:{name:"Хозяин земли",grad:"linear-gradient(120deg,#006B35,#00A854)",lead:"roots",
+  rule:"Сильнее всего улица «Корни»",
+  sees:"Сильнее всего у вас «Корни», то есть поле: вы понимаете поле, знаете, когда сеять, а когда подождать. Какие направления отстают, видно на звезде сил.",
+  scene:"Поля золотые, колосья по пояс. Груженый зерновоз едет к выезду с доски и упирается в шлагбаум с надписью «Документы?». Водитель разводит руками.",
+  vo:"Урожай есть. Осталось его защитить."},
+ baron:{name:"Цифровой барон",grad:"linear-gradient(120deg,#0B4F6C,#1497C9)",lead:"contour",
+  rule:"Сильнее всего улица «Контур»",
+  sees:"Сильнее всего у вас «Контур», то есть цифра и защита: мошенникам с вами трудно, фальшивые ссылки вы замечаете. Какие направления отстают, видно на звезде сил.",
+  scene:"Мониторы, отчеты, зеленые галочки повсюду. Камера разворачивается к окну конторы, а за ним пустое поле и одинокий трактор.",
+  vo:"В системах порядок. А что на земле?"}
+};
+
+/* Шесть черт для звезды сил */
+const TRAITS=[
+ {k:"agro",n:"Агрономия",short:"Агрономия"},
+ {k:"money",n:"Экономика",short:"Экономика"},
+ {k:"ai",n:"Искусственный интеллект",short:"ИИ"},
+ {k:"ib",n:"Кибербезопасность",short:"Кибербез"},
+ {k:"digital",n:"Цифровые инструменты",short:"Цифра"},
+ {k:"calib",n:"Чутье: точность уверенности",short:"Чутье"}
+];
+const NICK_NOUN={agro:"агроном-практик",money:"счетовод",ai:"укротитель нейросетей",ib:"страж данных",digital:"цифровой следопыт",calib:"стратег"};
+const NICK_ADJ={bold:"Рисковый",calm:"Осторожный",mid:"Расчетливый",sniper:"Снайперский"};
+
+const RISK={
+ agro:"Решения на поле принимаются по привычке, а проблемы видны только после уборки, когда их уже не исправить.",
+ money:"Деньги утекают по мелочам: покупки без расчета окупаемости, обещания продавцов, внедрение «на все сразу».",
+ ai:"ИИ либо обходят стороной, либо покупают по рекламе. В обоих случаях соседи получают эффект раньше.",
+ ib:"Одно письмо или один звонок — и деньги или доступы уходят мошенникам. В АПК таких атак все больше.",
+ digital:"Данные есть, но ими не пользуются: снимки, учет и системы живут отдельно от решений.",
+ calib:"Самые дорогие ошибки — уверенные. Когда «знаю точно» основано на устаревших правилах, страдает весь сезон."
+};
+const TODO={
+ agro:"Сверьте севооборот за 3 года по каждому полю и отметьте поля с повторными посевами.",
+ money:"Составьте список трех последних покупок техники или софта и проверьте, окупились ли они так, как обещали.",
+ ai:"Выберите один процесс, где ИИ может сэкономить время или деньги, и поставьте одну измеримую цель.",
+ ib:"Включите второй фактор входа во все рабочие сервисы и договоритесь о кодовом слове для срочных платежей.",
+ digital:"Проверьте, кто в хозяйстве смотрит спутниковые снимки и как часто по ним выезжают в поле.",
+ calib:"Перед крупным решением спрашивайте себя: «Откуда я это знаю и когда это проверял?»"
+};
+
+const GROW={
+ agro:["Агрономия","севооборот, сроки сева, агроклиматика и защита растений"],
+ money:["Экономика хозяйства","расчет окупаемости и проверка обещаний поставщиков"],
+ ai:["Искусственный интеллект в АПК","где ИИ уже дает эффект и как начать с одного процесса"],
+ ib:["Информационная безопасность","фишинг, пароли, поддельные звонки и ссылки"],
+ digital:["Цифровые инструменты и госсистемы","ФГИС, спутниковый мониторинг, учетные системы"],
+ calib:["Проверка решений","опора на актуальные данные, а не на привычку"]
+};
+const SITE="https://agropromcifra.ru/";
+
+/* Реплики Пшенички */
+const HOST_OK=["Точно!","В яблочко!","Так держать!","Вот это хватка!","Знаете толк!"];
+const HOST_NO=["Мимо.","Не в этот раз.","А вот и нет.","Бывает и у профи.","Запомним!"];
+const HOST_INTRO=["Начинаем! Улица «Корни» — про поле.","Улица «Хватка»: деньги, решения, ИИ.","Улица «Контур»: защита и цифра. Тут чаще всего разоряются."];
+
+/* ===== STATE ===== */
+let S;
+function reset(){S={pred:null,i:0,cap:START,bankrupt:false,credits:0,ans:[],opts:[],sel:null,bet:null,pos:0}}
+reset();
+let HOSTN='Пшеничка';
+function pickHost(h){
+  HOSTN=h==='kol'?'Колосок':'Пшеничка';document.body.classList.toggle('kol',h==='kol');
+  if(h==='kol'){PSH=KOL[0];PSH_IDLE=KOL[1];PSH_OK=KOL[2];PSH_NO=KOL[3]}else{PSH=P0[0];PSH_IDLE=P0[1];PSH_OK=P0[2];PSH_NO=P0[3]}
+  const pi=document.getElementById('predimg');if(pi)pi.src=PSH;go('predict');
+}
+function go(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('on'));document.getElementById(id).classList.add('on');window.scrollTo(0,0)}
+
+/* ===== BOARD ===== */
+const PATH=[];(()=>{for(let c=0;c<6;c++)PATH.push([0,c]);for(let r=1;r<6;r++)PATH.push([r,5]);for(let c=4;c>=0;c--)PATH.push([5,c]);for(let r=4;r>=1;r--)PATH.push([r,0])})();
+const DECOR={0:["Старт","+1000 монет"],16:["Ярмарка","«Золотая осень»"],17:["Банк АПК","в долг не дает"],18:["Налог","на самоуверенность"],19:["Урожай 2027","финиш"]};
+const ICONS=["media/ic_0.webp","media/ic_1.webp","media/ic_2.webp","media/ic_3.webp","media/ic_4.webp","media/ic_5.webp","media/ic_6.webp","media/ic_7.webp","media/ic_8.webp","media/ic_9.webp","media/ic_10.webp","media/ic_11.webp","media/ic_12.webp","media/ic_13.webp","media/ic_14.webp","media/ic_15.webp","media/ic_16.webp","media/ic_17.webp","media/ic_18.webp","media/ic_19.webp"],BCENTER="media/board_center.webp",QR="media/qr_site.webp";
+const HOUSE='<svg class="house" viewBox="0 0 16 16"><path d="M8 1 1 7h2v8h10V7h2z" fill="#00A854"/></svg>';
+function buildBoard(){
+  const b=document.getElementById('board');b.innerHTML='';
+  PATH.forEach((rc,idx)=>{
+    const d=document.createElement('div');d.className='cell';d.id='c'+idx;
+    d.style.gridRow=rc[0]+1;d.style.gridColumn=rc[1]+1;
+    if(idx>=1&&idx<=15){
+      const q=Q[idx-1],st=STREETS[q.s];
+      if(q.chance){d.classList.add('corner','chance');d.style.setProperty('--sc',st.color);d.innerHTML=`<span class="qb" style="background:${st.color}">?</span><img class="cim" src="${ICONS[idx]}" alt=""><div class="clbl">Шанс ×2<small>${q.short}</small></div>`+HOUSE}
+      else d.innerHTML=`<div class="cb" style="background:${st.color}"></div><img class="ci" src="${ICONS[idx]}" alt=""><div class="ct"><span>${q.short}</span><span class="cn">${String(idx).padStart(2,'0')}</span></div>`+HOUSE;
+    }else{
+      const t=DECOR[idx];
+      d.classList.add('corner','deco');d.innerHTML=`<img class="cim" src="${ICONS[idx]}" alt=""><div class="clbl">${t[0]}<small>${t[1]}</small></div>`;
+      if(idx===0)d.classList.add('start');
+    }
+    b.appendChild(d);
+  });
+  const c=document.createElement('div');c.className='center';
+  c.style.backgroundImage=`url(${BCENTER})`;
+  c.innerHTML=`<div class="plate"><img class="logo" src="${LOGO}" alt=""><div class="ttl">Что<br><span class="grad">посеешь</span></div>
+   <div class="cap"><small>Капитал</small><span id="capv">${S.cap}</span></div>
+   <div class="streets">${ORDER.map(k=>`<span class="sp"><i style="background:${STREETS[k].color}"></i>${STREETS[k].name} <b id="sc_${k}">0/5</b></span>`).join('')}</div></div>`;
+  b.appendChild(c);
+  const t=document.createElement('div');t.className='token';t.id='token';
+  const PIPS={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
+  t.innerHTML='<div class="dshadow"></div><div class="die" id="die">'+[1,2,3,4,5,6].map(n=>`<div class="df f${n}">${[1,2,3,4,5,6,7,8,9].map(k=>`<i class="${PIPS[n].includes(k)?'on':''}"></i>`).join('')}</div>`).join('')+'</div>';
+  b.appendChild(t);S.rx=-22;S.ry=32;
+  moveToken(0);
+}
+function cellCenter(idx,mid){const b=document.getElementById('board').getBoundingClientRect(),c=document.getElementById('c'+idx).getBoundingClientRect();return[(c.left+c.width/2-b.left)/b.width*100,(c.top+c.height*(mid?.5:.74)-b.top)/b.height*100]}
+function moveToken(idx){const t=document.getElementById('token'),[x,y]=cellCenter(idx);t.style.setProperty('--h',t.offsetWidth+'px');
+  const d=document.getElementById('die');if(d&&idx!==S.pos){const side=idx<=5?0:idx<=10?1:idx<=15?2:3;
+    if(side===0)S.ry+=90;else if(side===1)S.rx-=90;else if(side===2)S.ry-=90;else S.rx+=90;
+    d.style.transform=`rotateX(${S.rx}deg) rotateY(${S.ry}deg)`;t.classList.remove('hop');void t.offsetWidth;t.classList.add('hop')}t.style.left=x+'%';t.style.top=y+'%';document.querySelectorAll('.cell.cur').forEach(c=>c.classList.remove('cur'));document.getElementById('c'+idx).classList.add('cur');S.pos=idx}
+function walkTo(idx){return new Promise(res=>{const step=()=>{if(S.pos===idx){res();return}moveToken((S.pos+1)%20);setTimeout(step,330)};step()})}
+window.addEventListener('resize',()=>{if(document.getElementById('token'))moveToken(S.pos)});
+
+/* ===== GAME ===== */
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function startGame(p){reset();S.pred=p;go('game');buildBoard();renderProg();setTimeout(()=>walkTo(1).then(renderQ),350)}
+function renderProg(){document.getElementById('prog').innerHTML=Q.map((q,i)=>{const a=S.ans[i];return`<i class="${a?(a.ok?'ok':'no'):(i===S.i?'now':'')}"></i>`}).join('');document.getElementById('qnum').textContent=`${Math.min(S.i+1,15)} / 15`}
+const LVL=["","Разминка","Средне","Для профи"];
+function dots(l){return '<span class="lvl">'+[1,2,3].map(i=>`<i class="${i<=l?'on':''}"></i>`).join('')+' '+LVL[l]+'</span>'}
+function renderQ(){
+  const q=Q[S.i],st=STREETS[q.s],m=q.chance?2:1;
+  S.opts=shuffle(q.o);S.sel=null;S.bet=null;
+  const hello=S.i%5===0?`<div class="host"><img src="${PSH}" alt=""><div class="bubble">${HOST_INTRO[S.i/5]}</div></div>`:'';
+  document.getElementById('qcard').innerHTML=`${hello}
+   <div class="qmeta"><span class="chip" style="background:${st.color}">Улица «${st.name}»</span>${q.chance?'<span class="chip x2">Шанс · ставка ×2</span>':''}${dots(q.lvl)}</div>
+   <div class="qtitle">${q.title}</div>
+   <div class="qtext">${q.text}</div>
+   <div class="opts" id="opts">${S.opts.map((o,k)=>`<button class="opt" onclick="pick(${k})"><span class="l">${'АБВГ'[k]}</span><span>${o[0]}</span></button>`).join('')}</div>
+   <div class="bet" id="bet"><div class="bl">Насколько вы уверены? <span>Ставка из капитала ${S.cap} монет</span></div>
+     <div class="chips">${BETS.map((b,k)=>`<button class="coin" onclick="bet(${k})">${b*m}<small>${['сомневаюсь','скорее да','уверен'][k]}</small></button>`).join('')}</div></div>
+   <div class="reveal" id="rev"></div>
+   <div class="actions"><button class="btn" id="go" disabled onclick="answer()">Ответить</button></div>`;
+  renderProg();
+}
+function pick(k){S.sel=k;document.querySelectorAll('.opt').forEach((e,i)=>e.classList.toggle('sel',i===k));document.getElementById('bet').classList.add('on');upd()}
+function bet(k){S.bet=k;document.querySelectorAll('.coin').forEach((e,i)=>e.classList.toggle('sel',i===k));upd()}
+function upd(){document.getElementById('go').disabled=!(S.sel!==null&&S.bet!==null)}
+function rnd(a){return a[Math.floor(Math.random()*a.length)]}
+function answer(){
+  const q=Q[S.i],m=q.chance?2:1,stake=BETS[S.bet]*m,ok=!!S.opts[S.sel][1];
+  const delta=ok?stake:-stake;S.cap+=delta;
+  S.ans[S.i]={ok,delta,stake,bet:S.bet,s:q.s};
+  document.getElementById('opts').classList.add('locked');
+  document.querySelectorAll('.opt').forEach((e,i)=>{if(S.opts[i][1])e.classList.add('right');else if(i===S.sel)e.classList.add('wrong')});
+  document.getElementById('bet').classList.add('locked');
+  const r=document.getElementById('rev');r.className='reveal on '+(ok?'good':'bad');
+  r.innerHTML=`<img class="ava" src="${ok?PSH_OK:PSH_NO}" alt=""><div><div class="rh">${ok?rnd(HOST_OK):rnd(HOST_NO)} ${ok?'+':'−'}${stake} монет</div><div class="who">${HOSTN} подсказывает</div><p>${q.f}</p></div>`;
+  document.getElementById('c'+(S.i+1)).classList.add(ok?'won':'lost');
+  flyCoin(delta);
+  document.getElementById('capv').textContent=S.cap;
+  document.querySelector('#bet .bl span').textContent=`Капитал теперь ${S.cap} монет`;
+  const sc=ORDER.reduce((o,k)=>(o[k]=S.ans.filter(a=>a&&a.s===k&&a.ok).length,o),{});
+  ORDER.forEach(k=>document.getElementById('sc_'+k).textContent=sc[k]+'/5');
+  const g=document.getElementById('go');g.disabled=false;g.textContent=S.i===14?'К итогам →':'Дальше →';g.onclick=next;
+  renderProg();
+  const h=document.querySelector('#qcard .host');if(h)h.remove();
+  setTimeout(()=>r.scrollIntoView({behavior:'smooth',block:'end'}),60);
+}
+function flyCoin(d){const b=document.getElementById('board'),[x,y]=cellCenter(S.pos,1);const f=document.createElement('div');f.className='coinfly';f.style.left=x+'%';f.style.top=y+'%';f.style.color=d>0?'#00A854':'#E5484D';f.textContent=(d>0?'+':'')+d;b.appendChild(f);setTimeout(()=>f.remove(),1400)}
+async function next(){
+  if(S.cap<=0){await bankruptModal();S.i++;await walkTo(19);finish();return}
+  const q=Q[S.i];
+  if((S.i+1)%5===0){await streetModal(q.s)}
+  S.i++;
+  if(S.i>=15){await walkTo(19);finish();return}
+  await walkTo(S.i+1);renderQ();
+}
+function modal(html){return new Promise(res=>{const o=document.getElementById('ov');document.getElementById('modal').innerHTML=html+'<button class="btn" id="mok">Дальше →</button>';o.classList.add('on');document.getElementById('mok').onclick=()=>{o.classList.remove('on');res()}})}
+function bankruptModal(){
+  S.bankrupt=true;S.stop=S.i+1;document.getElementById('capv').textContent=0;
+  return modal(`<img class="mava no" src="${PSH_NO}" alt=""><div class="stamp">Банкрот</div><h3>Капитал закончился</h3><div class="big">0 монет</div><p>Банк в долг не дает: сезон для вас окончен на вопросе ${S.i+1} из 15. Переходим к итогам.</p>`);
+}
+const STREET_PHRASE=[[5,"Улица ваша целиком. Можно ставить элеватор."],[4,"Улица почти ваша. Одна клетка пока у банка."],[3,"Амбары стоят, но ветер гуляет."],[0,"Улица уходит с молотка."]];
+function streetModal(s){
+  const n=S.ans.filter(a=>a&&a.s===s&&a.ok).length,money=S.ans.filter(a=>a&&a.s===s).reduce((x,a)=>x+a.delta,0);
+  const ph=STREET_PHRASE.find(p=>n>=p[0])[1];const st=STREETS[s];
+  return modal(`<img class="mava ${n>=3?'ok':'no'}" src="${n>=3?PSH_OK:PSH_NO}" alt=""><span class="chip" style="background:${st.color}">Улица «${st.name}» пройдена</span><h3>${ph}</h3><div class="big">${n} / 5</div><p>На этой улице вы ${money>=0?'заработали':'потеряли'} ${Math.abs(money)} монет.</p>`);
+}
+
+/* ===== RESULT ===== */
+function calc(){
+  const A=S.ans.filter(Boolean),sc={},mo={};ORDER.forEach(k=>{sc[k]=A.filter(a=>a.s===k&&a.ok).length;mo[k]=A.filter(a=>a.s===k).reduce((x,a)=>x+a.delta,0)});
+  const byStrong=ORDER.slice().sort((a,b)=>sc[b]-sc[a]||mo[b]-mo[a]);
+  const strong=byStrong[0],weak=byStrong[2];
+  const vals=ORDER.map(k=>sc[k]);
+  let key;const net=S.cap;
+  if(S.bankrupt||net<=0||vals.every(v=>v<=2))key='bankrot';
+  else if(vals.every(v=>v>=4))key='magnat';
+  else if(Math.max(...vals)===Math.min(...vals))key='krepkiy';
+  else key={grip:'kupec',roots:'hozyain',contour:'baron'}[strong];
+  return{sc,mo,strong,weak,key,traits:traits()};
+}
+/* черты 0..100 */
+function traits(){
+  const t={};
+  TRAITS.forEach(T=>{
+    if(T.k==='calib'){
+      // уверенность совпадает с правотой: верно на 300 = 1, верно на 100 = .5, ошибка на 100 = .6, ошибка на 300 = 0
+      const sc=S.ans.filter(Boolean).map(a=>a.ok?[.5,.75,1][a.bet]:[.6,.3,0][a.bet]);
+      t.calib=Math.round(sc.reduce((x,y)=>x+y,0)/sc.length*100);return;
+    }
+    const idx=Q.map((q,i)=>i).filter(i=>Q[i].tags.includes(T.k)&&S.ans[i]);
+    let w=0,g=0;idx.forEach(i=>{const wt=Q[i].lvl;w+=wt;if(S.ans[i]&&S.ans[i].ok)g+=wt});
+    t[T.k]=w?Math.round(g/w*100):0;
+  });
+  return t;
+}
+function betStyle(){
+  const AA=S.ans.filter(Boolean),avg=AA.reduce((x,a)=>x+a.bet,0)/AA.length;
+  const maxHits=AA.filter(a=>a.bet===2);const sniper=maxHits.length>=5&&maxHits.filter(a=>a.ok).length/maxHits.length>=.85;
+  if(sniper)return'sniper';if(avg>=1.4)return'bold';if(avg<=.6)return'calm';return'mid';
+}
+function nickname(T){
+  const top=TRAITS.slice().sort((a,b)=>T[b.k]-T[a.k])[0].k;
+  return NICK_ADJ[betStyle()]+' '+NICK_NOUN[top];
+}
+function wrongIdx(f){return Q.map((q,i)=>i).filter(i=>S.ans[i]&&!S.ans[i].ok&&f(Q[i]))}
+function weakTraits(T){return TRAITS.slice().sort((a,b)=>T[a.k]-T[b.k]).filter(x=>T[x.k]<85)}
+function recs(R){const w=weakTraits(R.traits).slice(0,3).map(x=>x.k);return w}
+function finish(){
+  const R=calc();S.R=R;
+  try{const h=JSON.parse(localStorage.getItem('chto_poseesh')||'[]');h.push({sc:R.sc,ok:S.ans.filter(a=>a&&a.ok).length,tr:R.traits,cap:S.cap,key:R.key,t:Date.now()});localStorage.setItem('chto_poseesh',JSON.stringify(h.slice(-2000)))}catch(e){}
+  modal(`<img class="mava" src="${PSH}" alt=""><span class="tag">Урожай собран</span><h3>Считаем итоги</h3><p>Сейчас узнаете, какой вы хозяин. Смотрите на экран.</p>`).then(()=>playVideo(R.key));
+}
+function playVideo(key){
+  const E=ENDINGS[key],src=(HOSTN==='Колосок'?VIDEOS_KOL:VIDEOS)[key],f=document.getElementById('vframe');
+  go('video');
+  if(src){
+    f.innerHTML=`<video src="${src}" autoplay playsinline></video>
+     <div class="vt vt1"><span class="k">Ваш урожай</span><h2>${E.name}</h2></div>
+     <div class="vt vt2"><img src="${PSH_IDLE}" alt=""><div class="bubble">${E.vo}</div></div>
+     <div class="vbar" id="vbar"></div>`;
+    const v=f.querySelector('video'),bar=document.getElementById('vbar');
+    v.ontimeupdate=()=>{const t=v.currentTime,d=v.duration||10;bar.style.width=(t/d*100)+'%';
+      f.querySelector('.vt1').classList.toggle('on',t>0.6&&t<d-0.2);
+      f.querySelector('.vt2').classList.toggle('on',t>d*0.45)};
+    v.onended=()=>setTimeout(showFate,1800);
+    v.play().catch(()=>{v.muted=true;v.play()});
+    return}
+  f.innerHTML=`<div class="vph"><div class="k">Здесь будет ролик Higgsfield · 10 сек</div><h2>${E.name}</h2><p class="scene">${E.scene}</p><p class="vo">«${E.vo}»</p></div><div class="vbar" id="vbar"></div>`;
+  const bar=document.getElementById('vbar');bar.style.transition='width 8s linear';requestAnimationFrame(()=>requestAnimationFrame(()=>bar.style.width='100%'));
+}
+/* звезда сил: SVG-радар */
+function radar(T,avg){
+  const N=TRAITS.length,cx=260,cy=200,Rr=135;
+  const pt=(i,v)=>{const a=-Math.PI/2+i*2*Math.PI/N;return[cx+Math.cos(a)*Rr*v,cy+Math.sin(a)*Rr*v]};
+  const poly=vals=>vals.map((v,i)=>pt(i,Math.max(v,4)/100).join(',')).join(' ');
+  let g='';
+  [.25,.5,.75,1].forEach(r=>g+=`<polygon points="${TRAITS.map((_,i)=>pt(i,r).join(',')).join(' ')}" fill="none" stroke="#D3D7DC" stroke-width="1"/>`);
+  TRAITS.forEach((_,i)=>{const[x,y]=pt(i,1);g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#E5E5E5"/>`});
+  if(avg)g+=`<polygon points="${poly(TRAITS.map(t=>avg[t.k]))}" fill="none" stroke="#E9A825" stroke-width="2.5" stroke-dasharray="6 5"/>`;
+  g+=`<polygon points="${poly(TRAITS.map(t=>T[t.k]))}" fill="url(#rg)" fill-opacity=".55" stroke="#00A854" stroke-width="3" stroke-linejoin="round"/>`;
+  TRAITS.forEach((t,i)=>{const[x,y]=pt(i,Math.max(T[t.k],4)/100);g+=`<circle cx="${x}" cy="${y}" r="5" fill="#00A854" stroke="#fff" stroke-width="2"/>`;
+    const[lx,ly]=pt(i,1.2);const anc=Math.abs(lx-cx)<8?'middle':(lx>cx?'start':'end');
+    g+=`<text x="${lx}" y="${ly-4}" text-anchor="${anc}" font-family="Unbounded" font-weight="700" font-size="13" fill="#101828">${t.short}</text><text x="${lx}" y="${ly+13}" text-anchor="${anc}" font-family="Inter" font-weight="600" font-size="13" fill="#646466">${T[t.k]}%</text>`});
+  return `<svg viewBox="0 0 520 400" class="radar"><defs><linearGradient id="rg" x1="0" x2="1"><stop offset="0" stop-color="#0CC642"/><stop offset="1" stop-color="#1EE4BA"/></linearGradient></defs>${g}</svg>`;
+}
+function history(){try{return JSON.parse(localStorage.getItem('chto_poseesh')||'[]').slice(0,-1)}catch(e){return[]}}
+function showFate(){
+  const R=S.R,E=ENDINGS[R.key],T=R.traits,pred=S.pred,H=history();
+  const okN=S.ans.filter(a=>a&&a.ok).length;
+  const hard=Q.map((q,i)=>i).filter(i=>Q[i].lvl===3),hardOk=hard.filter(i=>S.ans[i]&&S.ans[i].ok).length;
+  const maxB=S.ans.filter(a=>a&&a.bet===2),maxOk=maxB.filter(a=>a.ok).length;
+  let streak=0,cur=0;S.ans.forEach(a=>{cur=a&&a.ok?cur+1:0;streak=Math.max(streak,cur)});
+  const net=Math.max(0,S.cap);
+  const nick=nickname(T);
+  const sorted=TRAITS.slice().sort((a,b)=>T[b.k]-T[a.k]);
+  const top=sorted[0],low=sorted[sorted.length-1];
+  let avg=null,better=null;
+  if(H.length>=5){avg={};TRAITS.forEach(t=>avg[t.k]=Math.round(H.reduce((x,h)=>x+((h.tr&&h.tr[t.k])||0),0)/H.length));better=Math.round(H.filter(h=>(h.ok||0)<okN).length/H.length*100)}
+  const predOk=okN>0&&R.sc[pred]===R.sc[R.strong];
+  const self=okN===0?`Вы назвали своей сильной стороной «${STREETS[pred].name}», но до верных ответов дело не дошло. Сыграйте еще раз — проверим.`:predOk?`Вы назвали своей сильной стороной «${STREETS[pred].name}» — и не ошиблись. Вы трезво оцениваете себя, а это редкость.`
+    :`Вы считали сильной стороной «${STREETS[pred].name}», а по ответам сильнее «${STREETS[R.strong].name}». Так бывает у многих: опыт в одном направлении растет незаметно.`;
+  const facts=wrongIdx(()=>true).sort((a,b)=>Q[b].lvl-Q[a].lvl).slice(0,3);
+  const factHtml=(facts.length?facts:hard.slice(0,2)).map(i=>`<li><b>${Q[i].title}.</b> ${Q[i].f}</li>`).join('');
+  const weak=weakTraits(T).slice(0,2);
+  const rc=recs(R);
+  const stat=(v,l)=>`<div class="stat"><div class="sv">${v}</div><div class="sl">${l}</div></div>`;
+  document.getElementById('fate').innerHTML=`
+  <div class="fatecard">
+    <div class="fhead" style="background:${E.grad}">
+      <div><div class="k">Ваш агропрофиль · сезон 2027</div><h2>${E.name}</h2><div class="nick">«${nick}»</div></div>
+      <div class="capbox"><small>Итоговый капитал</small>${net} монет${S.stop?`<small style="margin-top:6px">разорение на вопросе ${S.stop} из 15</small>`:''}</div>
+    </div>
+    <div class="stats">
+      ${stat(okN+'/15','верных ответов')}
+      ${stat(hardOk+'/'+hard.length,'вопросов для профи')}
+      ${stat(maxB.length?Math.round(maxOk/maxB.length*100)+'%':'—','попаданий на ставке «уверен»')}
+      ${S.stop?stat(S.stop+'/15','вопросов до разорения'):stat(streak,'верных подряд — лучшая серия')}
+    </div>
+    <div class="fbody">
+      <div class="fcol">
+        <div class="fs"><h4>Звезда сил</h4>${radar(T,avg)}
+          <p class="legend"><i class="lg1"></i>вы ${avg?'<i class="lg2"></i>средний игрок стенда':''}</p></div>
+        <div class="fs"><h4>Итог</h4><p>${E.sees}</p></div>
+        <div class="fs"><h4>Самооценка</h4><p>${self}</p></div>
+        <div class="fs"><h4>Факты, которые пригодятся</h4><ul class="facts">${factHtml}</ul></div>
+      </div>
+      <div class="fcol">
+        <div class="fs"><h4>Сильная черта</h4><p><b>${top.n} — ${T[top.k]}%.</b> ${T[top.k]<50?'Пока ни одна черта не стала опорой. Начните с зон роста ниже — эффект будет заметен быстро.':top.k==='calib'?'Ваша уверенность почти всегда оправдана: вы знаете, где знаете, а где нет.':'Здесь вы опережаете большинство. На это можно опираться в решениях.'}</p></div>
+        <div class="fs"><h4>Зона роста</h4><p><b>${low.n} — ${T[low.k]}%.</b> ${RISK[low.k]}</p></div>
+        <div class="fs"><h4>Что сделать в понедельник</h4><ul class="todo">${(weak.length?weak:[low]).map(w=>`<li>${TODO[w.k]}</li>`).join('')}</ul></div>
+        <div class="fs"><h4>Что стоит подтянуть</h4>${rc.length?`<ul class="grow">${rc.map(k=>`<li><b>${GROW[k][0]}</b><span>${GROW[k][1]}</span></li>`).join('')}</ul>`:'<p>Явных слабых мест нет. Следующий шаг — переходить от знаний к внедрению.</p>'}
+          <div class="qrcta"><img src="${QR}" alt="QR-код agropromcifra.ru"><div><small>Наведите камеру телефона</small><b>agropromcifra.ru</b><span>Обучение и решения для АПК</span></div></div></div>
+      </div>
+    </div>
+    <div class="fatefoot"><img class="logo" src="${LOGO}" alt="" style="height:20px"><span>Игра «Что посеешь» · АО «Агропромцифра»</span></div>
+  </div>
+  <div class="noprint" style="display:flex;gap:12px"><button class="btn ghost" onclick="window.print()">Распечатать профиль</button><button class="btn" onclick="reset();go('intro')">Новая игра</button></div>`;
+  go('fate');armIdle();
+}
+let idleT;function armIdle(){clearTimeout(idleT);idleT=setTimeout(()=>{if(document.getElementById('fate').classList.contains('on')){reset();go('intro')}},120000)}
+document.addEventListener('pointerdown',()=>{if(document.getElementById('fate').classList.contains('on'))armIdle()});
+
+/* ===== REVIEW ===== */
+function openReview(tab){
+  tab=tab||'end';
+  const TB={end:'Концовки',q:'15 вопросов',logic:'Логика'};
+  let body='';
+  if(tab==='end'){
+    body=`<div class="rgrid">${Object.entries(ENDINGS).map(([k,E])=>`<div class="rcard"><div class="rh" style="background:${E.grad}"><span class="tag" style="background:rgba(255,255,255,.15);color:#fff;border-color:transparent">${k}</span><h3>${E.name}</h3></div>
+      <div class="rb"><div><b>Когда выпадает</b>${E.rule}</div><div><b>Сцена для Higgsfield</b>${E.scene}</div><div><b>Голос за кадром</b>«${E.vo}»</div><div><b>Текст итога</b>${E.sees}</div></div>
+      <div class="rf"><button class="btn ghost" style="padding:10px 18px;font-size:14px" onclick="demo('${k}')">Посмотреть экран концовки →</button></div></div>`).join('')}</div>`;
+  }else if(tab==='q'){
+    body=`<div class="qlist">${Q.map((q,i)=>`<div class="qrow"><div class="num" style="color:${STREETS[q.s].hex}">${String(i+1).padStart(2,'0')}</div><div><b>${q.title}</b> · улица «${STREETS[q.s].name}»${q.chance?' · Шанс ×2':''} · ${LVL[q.lvl]} · ${q.tags.join(', ')}<div style="margin-top:6px">${q.text}</div><ul>${q.o.map(o=>`<li class="${o[1]?'ok':''}">${o[0]}</li>`).join('')}</ul><div class="f">Подсказка: ${q.f}</div></div></div>`).join('')}</div>`;
+  }else{
+    body=`<div class="logic"><b>Капитал.</b> Старт 1000 монет. Ставка 100, 200 или 300, на клетке «Шанс» вдвое больше. Верно — ставка прибавляется, неверно — вычитается. Если капитал дошел до нуля, игра сразу заканчивается: кредитов нет, игрок переходит к итогам с концовкой «Банкрот».
+    <p style="margin-top:10px"><b>Сложность.</b> 5 вопросов-разминок с юмором, 3 средних, 7 для профи. Все три клетки «Шанс» — вопросы для профи. По симуляции среднего игрока: в среднем 10 из 15, все 15 — меньше 1 из 1000 партий.</p>
+    <table><tr><th>Порядок</th><th>Условие</th><th>Концовка</th></tr>
+    <tr><td>1</td><td>Капитал дошел до нуля во время игры, или все улицы ≤ 2 из 5</td><td>Банкрот</td></tr>
+    <tr><td>2</td><td>Все три улицы ≥ 4 из 5</td><td>Агромагнат</td></tr>
+    <tr><td>3</td><td>На всех улицах поровну верных</td><td>Крепкий хозяин</td></tr>
+    <tr><td>4</td><td>Иначе по сильнейшей улице (при равенстве — где больше монет)</td><td>Купец · Хозяин земли · Цифровой барон</td></tr></table>
+    <p style="margin-top:14px"><b>Звезда сил</b> — 6 черт: Агрономия, Экономика, ИИ, Кибербезопасность, Цифровые инструменты (доля верных по темам, сложные вопросы весят больше) и Чутье — насколько ставки совпадали с правотой.</p>
+    <p style="margin-top:8px"><b>Прозвище</b> = стиль ставок (Осторожный / Расчетливый / Рисковый / Снайперский) + сильнейшая черта (агроном-практик, счетовод, укротитель нейросетей, страж данных, цифровой следопыт, стратег).</p>
+    <p style="margin-top:8px"><b>Что подтянуть</b> — до трех самых слабых черт (ниже 85%), дальше ссылка на agropromcifra.ru. Сравнение со стендом считается по играм на этом устройстве.</p></div>`;
+  }
+  document.getElementById('review').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><img class="logo" src="${LOGO}" alt=""><button class="btn ghost" onclick="go('intro')">← К игре</button></div>
+   <h2>Согласование до генерации роликов</h2><div class="tabs">${Object.entries(TB).map(([k,v])=>`<button class="${k===tab?'on':''}" onclick="openReview('${k}')">${v}</button>`).join('')}</div>${body}`;
+  go('review');
+}
+function demo(key){
+  reset();S.pred='contour';
+  const pattern={bankrot:[0,1,0,1,0,1,0,0,1,0,0,1,0,1,0],magnat:[1,1,1,1,1,1,1,1,1,0,1,1,1,1,1],krepkiy:[1,1,1,0,0,1,1,0,1,0,1,1,0,1,0],kupec:[1,1,0,1,0,1,1,1,1,1,1,0,1,0,0],hozyain:[1,1,1,1,1,1,0,1,0,0,0,1,0,0,0],baron:[0,1,0,1,0,1,0,1,0,0,1,1,1,1,1]}[key];
+  pattern.forEach((ok,i)=>{const q=Q[i],b=ok?(i%3?2:1):(i%2?1:0),st=(q.chance?2:1)*BETS[b];S.ans[i]={ok:!!ok,delta:ok?st:-st,stake:st,bet:b,s:q.s};S.cap+=ok?st:-st});
+  if(key==='bankrot'){S.bankrupt=true;S.stop=11;S.cap=0;for(let i=11;i<15;i++)delete S.ans[i]}
+  S.R=calc();S.R.key=key;playVideo(key);
+}
+const qp=new URLSearchParams(location.search);if(qp.get('ending')&&ENDINGS[qp.get('ending')])demo(qp.get('ending'));if(qp.get('review')!==null)openReview();
+
+</script>
+</body>
+</html>
